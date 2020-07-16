@@ -1,0 +1,10 @@
+*.log
+
+network/system-genesis-block
+network/channel-artifacts
+
+network/organizations/ordererOrganizations
+network/organizations/peerOrganizations
+
+
+
