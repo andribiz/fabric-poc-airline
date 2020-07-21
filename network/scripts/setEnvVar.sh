@@ -10,6 +10,7 @@ export CORE_PEER_TLS_ENABLED=true
 export ORDERER_CA=${PWD}/organizations/ordererOrganizations/boeing.com/orderers/orderer.boeing.com/msp/tlscacerts/tlsca.boeing.com-cert.pem
 export PEER0_ORG1_CA=${PWD}/organizations/peerOrganizations/boeing.com/peers/peer0.boeing.com/tls/ca.crt
 export PEER0_ORG2_CA=${PWD}/organizations/peerOrganizations/airbus.com/peers/peer0.airbus.com/tls/ca.crt
+export FABRIC_CFG_PATH=${PWD}/config
 # export PEER0_ORG3_CA=${PWD}/organizations/peerOrganizations/org3.example.com/peers/peer0.org3.example.com/tls/ca.crt
 
 
