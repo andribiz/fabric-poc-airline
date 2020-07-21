@@ -238,42 +238,8 @@ function createOrgs() {
 
   fi
 
-  # Create crypto material using Fabric CAs
-  if [ "$CRYPTO" == "Certificate Authorities" ]; then
-
-    echo
-    echo "##########################################################"
-    echo "##### Generate certificates using Fabric CA's ############"
-    echo "##########################################################"
-
-    IMAGE_TAG=${CA_IMAGETAG} docker-compose -f $COMPOSE_FILE_CA up -d 2>&1
-
-    . organizations/fabric-ca/registerEnroll.sh
-
-    sleep 10
-
-    echo "##########################################################"
-    echo "############ Create Org1 Identities ######################"
-    echo "##########################################################"
-
-    createOrg1
-
-    echo "##########################################################"
-    echo "############ Create Org2 Identities ######################"
-    echo "##########################################################"
-
-    createOrg2
-
-    echo "##########################################################"
-    echo "############ Create Orderer Org Identities ###############"
-    echo "##########################################################"
-
-    createOrderer
-
-  fi
-
   echo
-  echo "Generate CCP files for Org1 and Org2"
+  echo "Generate CCP files for boeing and airbus"
   ./organizations/ccp-generate.sh
 }
 
@@ -357,7 +323,7 @@ function networkUp() {
   fi
 }
 
-## call the script to join create the channel and join the peers of org1 and org2
+## call the script to join create the channel and join the peers of boeing and airbus
 function createChannel() {
 
 ## Bring up the network if it is not arleady up.
@@ -382,7 +348,7 @@ function createChannel() {
 ## Call the script to isntall and instantiate a chaincode on the channel
 function deployCC() {
 
-  scripts/deployCC.sh $CHANNEL_NAME $CC_SRC_LANGUAGE $VERSION $CLI_DELAY $MAX_RETRY $VERBOSE
+  scripts/deployCC.sh $CHANNEL_NAME $CC_NAME $CC_SRC $VERSION $CC_SEQUENCE $CLI_DELAY $MAX_RETRY $VERBOSE
 
   if [ $? -ne 0 ]; then
     echo "ERROR !!! Deploying chaincode failed"
@@ -392,10 +358,57 @@ function deployCC() {
   exit 0
 }
 
+function generateCA() {
+    ## remove fabric ca artifacts
+  rm -rf organizations/fabric-ca/boeing/msp organizations/fabric-ca/boeing/tls-cert.pem organizations/fabric-ca/boeing/ca-cert.pem organizations/fabric-ca/boeing/IssuerPublicKey organizations/fabric-ca/boeing/IssuerRevocationPublicKey organizations/fabric-ca/boeing/fabric-ca-server.db
+  rm -rf organizations/fabric-ca/airbus/msp organizations/fabric-ca/airbus/tls-cert.pem organizations/fabric-ca/airbus/ca-cert.pem organizations/fabric-ca/airbus/IssuerPublicKey organizations/fabric-ca/airbus/IssuerRevocationPublicKey organizations/fabric-ca/airbus/fabric-ca-server.db
+  rm -rf organizations/fabric-ca/ordererOrg/msp organizations/fabric-ca/ordererOrg/tls-cert.pem organizations/fabric-ca/ordererOrg/ca-cert.pem organizations/fabric-ca/ordererOrg/IssuerPublicKey organizations/fabric-ca/ordererOrg/IssuerRevocationPublicKey organizations/fabric-ca/ordererOrg/fabric-ca-server.db
+  rm -rf addOrg3/fabric-ca/org3/msp addOrg3/fabric-ca/org3/tls-cert.pem addOrg3/fabric-ca/org3/ca-cert.pem addOrg3/fabric-ca/org3/IssuerPublicKey addOrg3/fabric-ca/org3/IssuerRevocationPublicKey addOrg3/fabric-ca/org3/fabric-ca-server.db
+
+  ## Remove Generated CA
+  rm -rf organizations/peerOrganizations organizations/ordererOrganizations
+
+
+  # Create crypto material using Fabric CAs
+  if [ "$CRYPTO" == "Certificate Authorities" ]; then
+
+    echo
+    echo "##########################################################"
+    echo "##### Generate certificates using Fabric CA's ############"
+    echo "##########################################################"
+
+    IMAGE_TAG=${CA_IMAGETAG} docker-compose -f $COMPOSE_FILE_CA up -d 2>&1
+
+    . organizations/fabric-ca/registerEnroll.sh
+
+    sleep 10
+
+    echo "##########################################################"
+    echo "############ Create Boeing Identities ######################"
+    echo "##########################################################"
+
+    createBoeing
+
+    echo "##########################################################"
+    echo "############ Create Airbus Identities ######################"
+    echo "##########################################################"
+
+    createAirbus
+
+    echo "##########################################################"
+    echo "############ Create Orderer Org Identities ###############"
+    echo "##########################################################"
+
+    createOrderer
+
+  fi
+  createConsortium
+}
+
 
 # Tear down running network
 function networkDown() {
-  # stop org3 containers also in addition to org1 and org2, in case we were running sample to add org3
+  # stop org3 containers also in addition to boeing and airbus, in case we were running sample to add org3
   docker-compose -f $COMPOSE_FILE_BASE -f $COMPOSE_FILE_COUCH -f $COMPOSE_FILE_CA down --volumes --remove-orphans
   # Don't remove the generated artifacts -- note, the ledgers are always removed
   if [ "$MODE" != "restart" ]; then
@@ -405,13 +418,7 @@ function networkDown() {
     #Cleanup images
     removeUnwantedImages
     # remove orderer block and other channel configuration transactions and certs
-    rm -rf system-genesis-block/*.block organizations/peerOrganizations organizations/ordererOrganizations
-    ## remove fabric ca artifacts
-    rm -rf organizations/fabric-ca/org1/msp organizations/fabric-ca/org1/tls-cert.pem organizations/fabric-ca/org1/ca-cert.pem organizations/fabric-ca/org1/IssuerPublicKey organizations/fabric-ca/org1/IssuerRevocationPublicKey organizations/fabric-ca/org1/fabric-ca-server.db
-    rm -rf organizations/fabric-ca/org2/msp organizations/fabric-ca/org2/tls-cert.pem organizations/fabric-ca/org2/ca-cert.pem organizations/fabric-ca/org2/IssuerPublicKey organizations/fabric-ca/org2/IssuerRevocationPublicKey organizations/fabric-ca/org2/fabric-ca-server.db
-    rm -rf organizations/fabric-ca/ordererOrg/msp organizations/fabric-ca/ordererOrg/tls-cert.pem organizations/fabric-ca/ordererOrg/ca-cert.pem organizations/fabric-ca/ordererOrg/IssuerPublicKey organizations/fabric-ca/ordererOrg/IssuerRevocationPublicKey organizations/fabric-ca/ordererOrg/fabric-ca-server.db
-    rm -rf addOrg3/fabric-ca/org3/msp addOrg3/fabric-ca/org3/tls-cert.pem addOrg3/fabric-ca/org3/ca-cert.pem addOrg3/fabric-ca/org3/IssuerPublicKey addOrg3/fabric-ca/org3/IssuerRevocationPublicKey addOrg3/fabric-ca/org3/fabric-ca-server.db
-
+    # rm -rf system-genesis-block/*.block
 
     # remove channel and script artifacts
     rm -rf channel-artifacts log.txt fabcar.tar.gz fabcar
@@ -423,7 +430,7 @@ function networkDown() {
 # native binaries for your platform, e.g., darwin-amd64 or linux-amd64
 OS_ARCH=$(echo "$(uname -s | tr '[:upper:]' '[:lower:]' | sed 's/mingw64_nt.*/windows/')-$(uname -m | sed 's/x86_64/amd64/g')" | awk '{print tolower($0)}')
 # Using crpto vs CA. default is cryptogen
-CRYPTO="cryptogen"
+CRYPTO="Certificate Authorities"
 # timeout duration - the duration the CLI should wait for a response from
 # another container before giving up
 MAX_RETRY=5
@@ -449,7 +456,7 @@ VERSION=1
 # default image tag
 IMAGETAG="2.1.1"
 # default ca image tag
-CA_IMAGETAG="latest"
+CA_IMAGETAG="1.4.7"
 # default database
 DATABASE="leveldb"
 
@@ -505,8 +512,16 @@ while [[ $# -ge 1 ]] ; do
     DATABASE="$2"
     shift
     ;;
-  -l )
-    CC_SRC_LANGUAGE="$2"
+  -ccp )
+    CC_SRC="$2"
+    shift
+    ;;
+  -ccn )
+    CC_NAME="$2"
+    shift
+    ;;
+  -ccs )
+    CC_SEQUENCE="$2"
     shift
     ;;
   -v )
@@ -561,6 +576,9 @@ elif [ "$MODE" == "restart" ]; then
 elif [ "$MODE" == "deployCC" ]; then
   echo "deploying chaincode on channel '${CHANNEL_NAME}'"
   echo
+elif [ "$MODE" == "generateCA" ]; then
+  echo "generating ca"
+  echo
 else
   printHelp
   exit 1
@@ -574,6 +592,8 @@ elif [ "${MODE}" == "deployCC" ]; then
   deployCC
 elif [ "${MODE}" == "down" ]; then
   networkDown
+elif [ "${MODE}" == "generateCA" ]; then
+  generateCA
 elif [ "${MODE}" == "restart" ]; then
   networkDown
   networkUp

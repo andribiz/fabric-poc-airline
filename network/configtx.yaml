@@ -42,7 +42,7 @@ Organizations:
                 Rule: "OR('OrdererMSP.admin')"
 
         OrdererEndpoints:
-            - orderer.example.com:7050
+            - orderer.boeing.com:7050
 
     - &Boeing
         # DefaultOrg defines the organization which is used in the sampleconfig

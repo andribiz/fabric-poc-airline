@@ -1,5 +1,7 @@
 *.log
 
+vendor
+
 network/system-genesis-block
 network/channel-artifacts
 
