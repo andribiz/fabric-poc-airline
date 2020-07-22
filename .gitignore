@@ -2,6 +2,12 @@
 
 vendor
 
+node_modules
+
+user-wallet
+
+network/packages
+
 network/system-genesis-block
 network/channel-artifacts
 
@@ -9,4 +15,15 @@ network/organizations/ordererOrganizations
 network/organizations/peerOrganizations
 
 
+fabric-ca-server.db
+network/organizations/fabric-ca/airbus/msp
+network/organizations/fabric-ca/airbus/*.pem
+network/organizations/fabric-ca/airbus/Issuer*
 
+network/organizations/fabric-ca/boeing/msp
+network/organizations/fabric-ca/boeing/*.pem
+network/organizations/fabric-ca/boeing/Issuer*
+
+network/organizations/fabric-ca/ordererOrg/msp
+network/organizations/fabric-ca/ordererOrg/*.pem
+network/organizations/fabric-ca/ordererOrg/Issuer*
